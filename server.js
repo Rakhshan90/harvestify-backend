@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const dbConnect = require('./config/db/dbConnect');
 const userRouter = require('./router/userRouter');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const productRouter = require('./router/productRouter');
 
 
 
@@ -23,6 +24,8 @@ app.use(express.json());
 // user router
 app.use('/api/users', userRouter);
 
+// product router
+app.use('/api/products', productRouter);
 
 
 // middlewares
