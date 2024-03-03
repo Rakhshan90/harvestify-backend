@@ -19,7 +19,7 @@ const createProductCtrl = expressAsyncHandler(async (req, res) => {
 
 const fetchProductsCtrl = expressAsyncHandler(async (req, res) => {
     try {
-        const products = await Product.find({});
+        const products = await Product.find({}).populate('owner');
         res.json(products);
     } catch (error) {
         res.json(error);
@@ -31,7 +31,7 @@ const fetchProductDetails = expressAsyncHandler(async (req, res)=>{
     validateMongoId(id);
 
     try {
-        const product = await Product.findById(id);
+        const product = await Product.findById(id).populate('owner');
         res.json(product);
     } catch (error) {
         res.json(error);
