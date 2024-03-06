@@ -4,6 +4,7 @@ const dbConnect = require('./config/db/dbConnect');
 const userRouter = require('./router/userRouter');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const productRouter = require('./router/productRouter');
+const auctionRouter = require('./router/auctionRouter');
 
 
 
@@ -27,6 +28,8 @@ app.use('/api/users', userRouter);
 // product router
 app.use('/api/products', productRouter);
 
+// auction router
+app.use('/api/auctions', auctionRouter);
 
 // middlewares
 app.use(notFound);

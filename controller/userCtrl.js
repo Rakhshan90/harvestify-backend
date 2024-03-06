@@ -57,7 +57,7 @@ const userLoginCtrl = expressAsyncHandler(async (req, res) => {
 
 const fetchUsersCtrl = expressAsyncHandler(async (req, res) => {
     try {
-        const users = await User.find({});
+        const users = await User.find({}).select("-password");
         res.json(users);
     } catch (error) {
         res.json(error);
@@ -81,7 +81,7 @@ const fetchUserDetailsCtrl = expressAsyncHandler(async (req, res) => {
     // check whether user id is valid
     validateMongoId(id);
     try {
-        const user = await User.findById(id);
+        const user = await User.findById(id).select("-password");
         res.json(user);
     } catch (err) {
         res.json(err);
@@ -146,7 +146,9 @@ const unBlockUserCtrl = expressAsyncHandler(async (req, res) => {
         },
         { new: true });
     res.json(user);
-})
+});
+
+
 
 
 
