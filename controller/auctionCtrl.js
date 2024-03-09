@@ -8,10 +8,10 @@ const Bid = require('../model/Bid');
 
 const createAuctionCtrl = expressAsyncHandler(async (req, res) => {
   // Destructure required fields from the request body
-  const { product, startingPrice, startTime, endTime } = req?.body;
+  const { product, startingPrice, startTime, endTime, location, category } = req?.body;
 
   // Validate input fields
-  if (!product || !startingPrice || !startTime || !endTime) {
+  if (!product || !startingPrice || !startTime || !endTime || !location || !category) {
     throw new Error('Please provide all required fields: product, startingPrice, startTime, endTime');
   }
 
@@ -31,6 +31,8 @@ const createAuctionCtrl = expressAsyncHandler(async (req, res) => {
       startingPrice,
       startTime,
       endTime,
+      location,
+      category,
     });
 
     // Send successful response with the created auction
@@ -41,8 +43,28 @@ const createAuctionCtrl = expressAsyncHandler(async (req, res) => {
 });
 
 const fetchAllAuctionsCtrl = expressAsyncHandler(async (req, res) => {
+  const location = req?.query?.location;
+  const category = req?.query?.category;
+
   try {
-    const auctions = await Auction.find({});
+    let auctions;
+    if (location) {
+      auctions = await Auction.find({
+        location: {
+          $in: [location],
+        }
+      })
+    }
+    else if (category) {
+      auctions = await Auction.find({
+        category: {
+          $in: [category],
+        }
+      })
+    }
+    else {
+      auctions = await Auction.find({});
+    }
     res.json(auctions);
   } catch (error) {
     res.json(error);
@@ -136,10 +158,81 @@ const placeBidCtrl = expressAsyncHandler(async (req, res) => {
   }
 });
 
+const fetchBidsOnAuctionCtrl = expressAsyncHandler(async (req, res) => {
+  const { auctionId } = req?.params;
+  validateMongoId(auctionId);
+
+  try {
+    const bids = await Bid.find({ auction: auctionId }).populate('placedBy');
+    res.json(bids);
+  } catch (error) {
+    res.json(error);
+  }
+});
+
+const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
+  try {
+    // Use a scheduled task or cron job to call this function periodically
+    // This example assumes it's called periodically
+    // Find all ongoing auctions (endTime in the future)
+    const ongoingAuctions = await Auction.find({ endTime: { $gt: Date.now() } });
+
+    for (const auction of ongoingAuctions) {
+      // Check if the auction's end time has passed
+      if (auction.endTime <= Date.now()) {
+        // Mark the auction as closed
+        auction.isActive = false;
+
+        // Find the highest bid
+        const existingBids = Bid.find({ auction: auction._id });
+        const highestBid = existingBids.length > 0 ? existingBids.reduce((max, bid) => Math.max(max, bid.amount), 0) : 0;
+        // const highestBid = await Bid.findOne({ auction: auction._id }).sort({ amount: -1 });
+
+        // Update the winner (optional)
+        if (highestBid) {
+          auction.winner = highestBid.placedBy; // Update the winner if a bid exists
+        }
+
+        // Save the updated auction
+        await auction.save();
+
+        // **Add notification logic here in the future**
+      }
+    }
+
+    // Send a success message
+    res.json({ message: 'Auctions closed successfully' });
+  } catch (error) {
+    // Handle errors appropriately
+    res.json(error);
+  }
+});
+
+const cancelAuctionCtrl = expressAsyncHandler(async (req, res) => {
+  const { auctionId } = req?.params;
+  const { _id } = req?.user;
+  validateMongoId(auctionId);
+  try {
+    const auction = await Auction.findById(auctionId);
+    const user = await User.findById(_id).select("-password");
+    if (!auction) return res.status(400).json({ message: "auction not found" });
+    if (!auction.isActive) return res.status(400).json({ message: "auction has already ended" });
+    if (!user.isAdmin) return res.status(400).json({ message: "only admin can cancel the auction" });
+    auction.isActive = false;
+    auction.save();
+    res.json(auction);
+  } catch (error) {
+    res.json(error);
+  }
+});
+
+
 
 module.exports = {
   createAuctionCtrl,
   fetchAllAuctionsCtrl,
   fetchAuctionByIdCtrl,
   placeBidCtrl,
+  fetchBidsOnAuctionCtrl,
+  cancelAuctionCtrl,
 };

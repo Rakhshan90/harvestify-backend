@@ -43,6 +43,14 @@ const auctionSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
     },
+    location: {
+        type: String,
+        required: [true, "location is required"],
+    },
+    category: {
+        type: String,
+        required: [true, "category is required"],
+    }
 },
     {
         toJSON: {
