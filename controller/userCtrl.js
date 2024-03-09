@@ -81,7 +81,8 @@ const fetchUserDetailsCtrl = expressAsyncHandler(async (req, res) => {
     // check whether user id is valid
     validateMongoId(id);
     try {
-        const user = await User.findById(id).populate('products');
+
+        const user = await User.findById(id).select("-password");
         res.json(user);
     } catch (err) {
         res.json(err);
@@ -146,7 +147,9 @@ const unBlockUserCtrl = expressAsyncHandler(async (req, res) => {
         },
         { new: true });
     res.json(user);
-})
+});
+
+
 
 
 

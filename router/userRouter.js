@@ -8,7 +8,7 @@ const {
     updateUserCtrl,
     updatePasswordCtrl,
     blockUserCtrl,
-    unBlockUserCtrl
+    unBlockUserCtrl,
 } = require('../controller/userCtrl');
 const authMiddleware = require('../middleware/authMiddleware');
 
