@@ -67,7 +67,7 @@ const fetchAllAuctionsCtrl = expressAsyncHandler(async (req, res) => {
     }
     res.json(auctions);
   } catch (error) {
-    res.json(error);
+    res.json(error);  
   }
 });
 
