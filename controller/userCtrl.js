@@ -81,6 +81,7 @@ const fetchUserDetailsCtrl = expressAsyncHandler(async (req, res) => {
     // check whether user id is valid
     validateMongoId(id);
     try {
+
         const user = await User.findById(id).select("-password");
         res.json(user);
     } catch (err) {

@@ -57,6 +57,11 @@ const userSchema = new mongoose.Schema({
     }
 );
 
+userSchema.virtual('products', {
+    ref: 'Product',
+    foreignField: 'owner',
+    localField: '_id',
+});
 
 
 //Hash password
