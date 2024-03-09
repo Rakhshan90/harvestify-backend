@@ -57,7 +57,7 @@ const userLoginCtrl = expressAsyncHandler(async (req, res) => {
 
 const fetchUsersCtrl = expressAsyncHandler(async (req, res) => {
     try {
-        const users = await User.find({}).populate('products');
+        const users = await User.find({}).select("-password");
         res.json(users);
     } catch (error) {
         res.json(error);
