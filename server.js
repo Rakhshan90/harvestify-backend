@@ -5,6 +5,8 @@ const userRouter = require('./router/userRouter');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const productRouter = require('./router/productRouter');
 const auctionRouter = require('./router/auctionRouter');
+const scheduled = require('node-schedule');
+const { closeAuctionCtrl } = require('./controller/auctionCtrl');
 
 
 
@@ -30,6 +32,9 @@ app.use('/api/products', productRouter);
 
 // auction router
 app.use('/api/auctions', auctionRouter);
+
+// scheduling the closeAuctionCtrl periodically
+const closeAuctionsJob = scheduled.scheduleJob("*/1 * * * *", closeAuctionCtrl);
 
 // middlewares
 app.use(notFound);
