@@ -67,7 +67,7 @@ const fetchAllAuctionsCtrl = expressAsyncHandler(async (req, res) => {
     }
     res.json(auctions);
   } catch (error) {
-    res.json(error);  
+    res.json(error);
   }
 });
 
@@ -108,7 +108,7 @@ const placeBidCtrl = expressAsyncHandler(async (req, res) => {
     }
 
     // Check if auction is not started yet
-    if(auction.startTime > Date.now()){
+    if (auction.startTime > Date.now()) {
       return res.status(400).json({ message: 'Auction is not started yet' });
     }
 
@@ -180,7 +180,6 @@ const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
     // This example assumes it's called periodically
     // Find all auctions 
     const auctions = await Auction.find({});
-    console.log(auctions.length);
     for (const auction of auctions) {
       // Check if the auction's end time has passed
       if (auction.endTime <= Date.now()) {
@@ -188,22 +187,23 @@ const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
         auction.isActive = false;
 
         // Find the highest bid
-        const existingBids = await Bid.find({ auction: auction?._id }).populate("placedBy");
-        const highestBid = existingBids.length > 0 ? existingBids.reduce((max, bid) => Math.max(max, bid.amount), 0) : 0;
-        
-        // const highestBid = await Bid.findOne({ auction: auction._id }).sort({ amount: -1 });
-
+        let existingBids = await Bid.find({ auction: auction?._id }).populate("placedBy");
+        // Sort bids by amount (highest first) after population
+        existingBids.sort((a, b) => b.amount - a.amount);
+        let highestBid = existingBids.length > 0 ? existingBids[0] : 0;
         // Update the winner (optional)
         if (highestBid) {
-          console.log(highestBid.placedBy);
           auction.winner = highestBid.placedBy ? highestBid.placedBy._id : null; // Access user ID
         }
 
+
         // Save the updated auction
-        await auction.save(); 
+        await auction.save();
 
         // **Add notification logic here in the future**
-        console.log(`Auction ${auction._id} closed successfully. Highest bid: ${highestBid}`); // Log for monitoring
+        
+        // Log for monitoring
+        // console.log(`Auction ${auction._id} closed successfully. Highest bid: ${highestBid}`); 
       }
     }
 
