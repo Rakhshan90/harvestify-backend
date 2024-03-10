@@ -86,7 +86,6 @@ const placeBidCtrl = expressAsyncHandler(async (req, res) => {
   // Destructure required fields from the request body
   const { auctionId, bidAmount } = req?.body;
 
-  console.log({ auctionId, bidAmount });
   // Validate input fields
   if (!auctionId || !bidAmount) {
     throw new Error('Please provide both auction ID and bid amount');
@@ -106,6 +105,11 @@ const placeBidCtrl = expressAsyncHandler(async (req, res) => {
     // Check if the auction is active (not ended)
     if (!auction.isActive) {
       return res.status(400).json({ message: 'Auction has already ended' });
+    }
+
+    // Check if auction is not started yet
+    if(auction.startTime > Date.now()){
+      return res.status(400).json({ message: 'Auction is not started yet' });
     }
 
     // Validate the user making the bid (optional)
@@ -174,37 +178,40 @@ const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
   try {
     // Use a scheduled task or cron job to call this function periodically
     // This example assumes it's called periodically
-    // Find all ongoing auctions (endTime in the future)
-    const ongoingAuctions = await Auction.find({ endTime: { $gt: Date.now() } });
-
-    for (const auction of ongoingAuctions) {
+    // Find all auctions 
+    const auctions = await Auction.find({});
+    console.log(auctions.length);
+    for (const auction of auctions) {
       // Check if the auction's end time has passed
       if (auction.endTime <= Date.now()) {
         // Mark the auction as closed
         auction.isActive = false;
 
         // Find the highest bid
-        const existingBids = Bid.find({ auction: auction._id });
+        const existingBids = await Bid.find({ auction: auction?._id }).populate("placedBy");
         const highestBid = existingBids.length > 0 ? existingBids.reduce((max, bid) => Math.max(max, bid.amount), 0) : 0;
+        
         // const highestBid = await Bid.findOne({ auction: auction._id }).sort({ amount: -1 });
 
         // Update the winner (optional)
         if (highestBid) {
-          auction.winner = highestBid.placedBy; // Update the winner if a bid exists
+          console.log(highestBid.placedBy);
+          auction.winner = highestBid.placedBy ? highestBid.placedBy._id : null; // Access user ID
         }
 
         // Save the updated auction
-        await auction.save();
+        await auction.save(); 
 
         // **Add notification logic here in the future**
+        console.log(`Auction ${auction._id} closed successfully. Highest bid: ${highestBid}`); // Log for monitoring
       }
     }
 
     // Send a success message
-    res.json({ message: 'Auctions closed successfully' });
+    // res.json({ message: 'Auctions closed successfully' });
   } catch (error) {
     // Handle errors appropriately
-    res.json(error);
+    console.error("Error closing auctions:", error); // Log errors for debugging
   }
 });
 
@@ -235,4 +242,5 @@ module.exports = {
   placeBidCtrl,
   fetchBidsOnAuctionCtrl,
   cancelAuctionCtrl,
+  closeAuctionCtrl,
 };
