@@ -2,6 +2,9 @@ const expressAsyncHandler = require('express-async-handler');
 const User = require('../model/User');
 const { generateToken } = require('../config/token/generateToken');
 const validateMongoId = require('../util/validateMongoId');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const Mailgen = require('mailgen');
 
 const userRegisterCtrl = expressAsyncHandler(async (req, res) => {
     const userExist = await User.findOne({ email: req?.body?.email });
@@ -149,8 +152,87 @@ const unBlockUserCtrl = expressAsyncHandler(async (req, res) => {
     res.json(user);
 });
 
+const generateResetPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
+    const email = req?.body?.email;
+    const user = await User.findOne({email});
+    if(!user) throw new Error("No such user is found");
+    try {
+        const token = await user.createResetPasswordToken();
+        await user.save();
+
+        const resetUrl = `If your were requested to reset your account, please reset your account within 10 mins, otherwise ignore this meassage <a href="http://localhost:5000/api/users/reset-password/${token}">Click to verify your account<a/>`;
+
+        //building email message
+        const transporter = await nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL,
+                pass: process.env.PASSWORD,
+            }
+        });
 
 
+        // Configure mailgen by setting a theme and your product info
+        var mailGenerator = new Mailgen({
+            theme: 'default',
+            product: {
+                // Appears in header & footer of e-mails
+                name: 'Harvestify',
+                link: 'https://mailgen.js/'
+                // Optional product logo
+                // logo: 'https://mailgen.js/img/logo.png'
+            }
+        });
+
+        var emailMsg = {
+            body: {
+                name: user?.firstName,
+                intro: 'Welcome to Harvestify! Reset your password.',
+                action: {
+                    instructions: 'To Reset your password, please click here:',
+                    button: {
+                        color: '#22BC66', // Optional action button color
+                        text: 'Reset Password',
+                        link: `http://localhost:5000/api/users/reset-password/${token}`
+                    }
+                },
+                outro: 'Do not reply to this email, It is an auto-generated email'
+            }
+        };
+
+        // Generate an HTML email with the provided contents
+        var emailBody = mailGenerator.generate(emailMsg);
+
+
+
+
+        const sentEmail = await transporter.sendMail({
+            from: process.env.EMAIL, // sender address
+            to: user?.email, // list of receivers
+            subject: "Reset Your Password", // Subject line
+            // text: "Hello world?", // plain text body
+            html: emailBody, // html body
+        });
+        res.json(resetUrl);
+    } catch (error) {
+        res.json(error);
+    }
+});
+
+const resetPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
+    const {password, token} = req?.body;
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await User.findOne({
+        resetPasswordToken: hashedToken,
+        resetPasswordTokenExpiration: {$gt: Date.now()}
+    });
+    if(!user) throw new Error("Failed to reset your password, try again");
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordTokenExpiration = undefined;
+    await user.save();
+    res.json(user);
+});
 
 
 module.exports = {
@@ -163,4 +245,6 @@ module.exports = {
     updatePasswordCtrl,
     blockUserCtrl,
     unBlockUserCtrl,
+    generateResetPasswordTokenCtrl,
+    resetPasswordTokenCtrl,
 };

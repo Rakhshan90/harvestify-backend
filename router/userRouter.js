@@ -9,6 +9,8 @@ const {
     updatePasswordCtrl,
     blockUserCtrl,
     unBlockUserCtrl,
+    generateResetPasswordTokenCtrl,
+    resetPasswordTokenCtrl,
 } = require('../controller/userCtrl');
 const authMiddleware = require('../middleware/authMiddleware');
 
@@ -24,5 +26,7 @@ userRouter.put('/update', authMiddleware, updateUserCtrl);
 userRouter.put('/update/password', authMiddleware, updatePasswordCtrl);
 userRouter.put('/block-user/:id', authMiddleware, blockUserCtrl);
 userRouter.put('/unblock-user/:id', authMiddleware, unBlockUserCtrl);
+userRouter.post('/forgot-password', generateResetPasswordTokenCtrl);
+userRouter.put('/reset-password', resetPasswordTokenCtrl);
 
 module.exports = userRouter;
