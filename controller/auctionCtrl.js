@@ -4,6 +4,8 @@ const Product = require('../model/Product');
 const validateMongoId = require('../util/validateMongoId');
 const User = require('../model/User');
 const Bid = require('../model/Bid');
+const nodemailer = require('nodemailer');
+const Mailgen = require('mailgen');
 
 
 const createAuctionCtrl = expressAsyncHandler(async (req, res) => {
@@ -182,7 +184,7 @@ const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
     const auctions = await Auction.find({});
     for (const auction of auctions) {
       // Check if the auction's end time has passed
-      if (auction.endTime <= Date.now()) {
+      if (auction.endTime <= Date.now() && !auction.isNotified) {
         // Mark the auction as closed
         auction.isActive = false;
 
@@ -201,9 +203,80 @@ const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
         await auction.save();
 
         // **Add notification logic here in the future**
-        
-        // Log for monitoring
-        // console.log(`Auction ${auction._id} closed successfully. Highest bid: ${highestBid}`); 
+        const winner = await User.findById(auction?.winner?._id);
+        const product = await Product.findById(auction?.product?._id);
+        const productOwner = await User.findById(product?.owner?._id);
+
+        const transporter = await nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL,
+            pass: process.env.PASSWORD
+          }
+        });
+
+        const mailGenerator = new Mailgen({
+          theme: 'default',
+          product: {
+            name: 'Harvestify',
+            link: 'https://mailgen.js/'
+          }
+        });
+
+        // email for the winner
+        const winnerEmailMsg = {
+          body: {
+            name: winner?.firstName,
+            intro: `Congratulations! You have won the auction for "${product?.product_name}" with a bid of Rs ${highestBid?.amount}`,
+            // Contact information of the product owner (name, email)
+            dictionary: {
+              name: `${productOwner?.firstName} ${productOwner?.lastName}`,
+              email: productOwner?.email,
+              phone: productOwner?.phone,
+              location: productOwner?.location,
+              gender: productOwner?.gender,
+            },
+          }
+        };
+
+        // Generate an HTML email with the provided contents
+        const winnerHTMLEmail = mailGenerator.generate(winnerEmailMsg);
+
+        const sentWinnerEmail = await transporter.sendMail({
+          from: process.env.EMAIL,
+          to: winner?.email,
+          subject: `You won the auction for ${product?.product_name}!`,
+          html: winnerHTMLEmail,
+        });
+
+        // email for the product owner
+        const ownerEmailMsg = {
+          body: {
+            name: productOwner?.firstName,
+            intro: `Congratulations! Your product "${product?.product_name}" has been sold for Rs ${highestBid?.amount} to ${winner?.firstName} ${winner?.lastName} (${winner?.email})`,
+            // Additional details like winner contact information (optional)
+            dictionary: {
+              name: `${winner?.firstName} ${winner?.lastName}`,
+              email: winner?.email,
+              phone: winner?.phone,
+              location: winner?.location,
+              gender: winner?.gender,
+            },
+          }
+        };
+
+        // Generate an HTML email with the provided contents
+        const ownerHTMLEmail = mailGenerator.generate(ownerEmailMsg);
+
+        const sentOwnerEmail = await transporter.sendMail({
+          from: process.env.EMAIL,
+          to: productOwner?.email,
+          subject: "Your product has been sold in auction!",
+          html: ownerHTMLEmail,
+        });
+
+        auction.isNotified = true;
+        await auction.save();
       }
     }
 
