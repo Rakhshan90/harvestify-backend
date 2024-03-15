@@ -50,6 +50,10 @@ const auctionSchema = new mongoose.Schema({
     category: {
         type: String,
         required: [true, "category is required"],
+    },
+    isNotified: {
+        type: Boolean,
+        default: false,
     }
 },
     {
