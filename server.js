@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const dbConnect = require('./config/db/dbConnect');
+const cors = require('cors');
 const userRouter = require('./router/userRouter');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const productRouter = require('./router/productRouter');
@@ -24,6 +25,9 @@ This express middleware is responsible for parsing the incoming json data into r
 */ 
 app.use(express.json());
 
+// cors
+app.use(cors()); 
+
 // user router
 app.use('/api/users', userRouter);
 
@@ -34,7 +38,7 @@ app.use('/api/products', productRouter);
 app.use('/api/auctions', auctionRouter);
 
 // scheduling the closeAuctionCtrl periodically
-const closeAuctionsJob = scheduled.scheduleJob("*/1 * * * *", closeAuctionCtrl);
+// const closeAuctionsJob = scheduled.scheduleJob("*/1 * * * *", closeAuctionCtrl);
 
 // middlewares
 app.use(notFound);

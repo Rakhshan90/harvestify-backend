@@ -22,7 +22,6 @@ const userRegisterCtrl = expressAsyncHandler(async (req, res) => {
             gender: req?.body?.gender,
             user_type: req?.body?.user_type,
         })
-
         res.json(user);
     } catch (error) {
         res.json(error);
@@ -160,7 +159,7 @@ const generateResetPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
         const token = await user.createResetPasswordToken();
         await user.save();
 
-        const resetUrl = `If your were requested to reset your account, please reset your account within 10 mins, otherwise ignore this meassage <a href="http://localhost:5000/api/users/reset-password/${token}">Click to verify your account<a/>`;
+        const resetUrl = `If your were requested to reset your account, please reset your account within 10 mins, otherwise ignore this meassage <a href="http://localhost:5173/reset-password/${token}">Click to verify your account<a/>`;
 
         //building email message
         const transporter = await nodemailer.createTransport({
@@ -193,7 +192,7 @@ const generateResetPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
                     button: {
                         color: '#22BC66', // Optional action button color
                         text: 'Reset Password',
-                        link: `http://localhost:5000/api/users/reset-password/${token}`
+                        link: `http://localhost:5173/reset-password/${token}`
                     }
                 },
                 outro: 'Do not reply to this email, It is an auto-generated email'

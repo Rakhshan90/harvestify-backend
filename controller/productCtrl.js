@@ -5,13 +5,17 @@ const validateMongoId = require('../util/validateMongoId');
 const createProductCtrl = expressAsyncHandler(async (req, res) => {
     const { _id } = req?.user;
     validateMongoId(_id);
-
+    
+    // get path to image
+    const imagePath = `images/products/${req.file.filename}`
+    console.log(imagePath);
     try {
-        const product = await Product.create({
-            ...req?.body,
-            owner: _id,
-        })
-        res.json(product);
+        // const product = await Product.create({
+        //     ...req?.body,
+        //     owner: _id,
+        // })
+        // res.json(product);
+        res.send('success');
     } catch (error) {
         res.json(error);
     }
