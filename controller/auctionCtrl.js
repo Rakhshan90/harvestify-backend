@@ -55,17 +55,17 @@ const fetchAllAuctionsCtrl = expressAsyncHandler(async (req, res) => {
         location: {
           $in: [location],
         }
-      })
+      }).populate('product').populate('winner')
     }
     else if (category) {
       auctions = await Auction.find({
         category: {
           $in: [category],
         }
-      })
+      }).populate('product').populate('winner')
     }
     else {
-      auctions = await Auction.find({});
+      auctions = await Auction.find({}).populate('product').populate('winner');
     }
     res.json(auctions);
   } catch (error) {
@@ -77,7 +77,7 @@ const fetchAuctionByIdCtrl = expressAsyncHandler(async (req, res) => {
   const { id } = req?.params;
   validateMongoId(id);
   try {
-    const auction = await Auction.findById(id);
+    const auction = await Auction.findById(id).populate('product').populate('winner');
     res.json(auction);
   } catch (error) {
     res.json(error);
