@@ -1,21 +1,25 @@
 const expressAsyncHandler = require('express-async-handler');
 const Product = require('../model/Product');
 const validateMongoId = require('../util/validateMongoId');
+const cloudinaryUploadImg = require('../util/cloudinary');
+const fs = require('fs')
 
 const createProductCtrl = expressAsyncHandler(async (req, res) => {
     const { _id } = req?.user;
     validateMongoId(_id);
     
     // get path to image
-    const imagePath = `images/products/${req.file.filename}`
-    console.log(imagePath);
+    const imagePath = `public/images/products/${req?.file?.filename}`
+    const uploadedImg = await cloudinaryUploadImg(imagePath);
     try {
-        // const product = await Product.create({
-        //     ...req?.body,
-        //     owner: _id,
-        // })
-        // res.json(product);
-        res.send('success');
+        const product = await Product.create({
+            ...req?.body,
+            image: uploadedImg?.url ,
+            owner: _id,
+        })
+        // remove image that is stored in images/products/image
+        fs.unlinkSync(imagePath);
+        res.json(product);
     } catch (error) {
         res.json(error);
     }
@@ -46,9 +50,14 @@ const updateProductCtrl = expressAsyncHandler(async (req, res)=>{
     const {id} = req?.params;
     validateMongoId(id);
 
+    // get path to image
+    const imagePath = `public/images/products/${req?.file?.filename}`
+    const uploadedImg = await cloudinaryUploadImg(imagePath);
     try {
         const updatedProduct = await Product.findByIdAndUpdate(id, {
-            ...req?.body
+            ...req?.body,
+            image: uploadedImg?.url ,
+
         }, {new: true, runValidators: true});
 
         res.json(updatedProduct);

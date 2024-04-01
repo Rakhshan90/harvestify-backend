@@ -7,14 +7,14 @@ const {
     updateProductCtrl,
     deleteProductCtrl
 } = require('../controller/productCtrl');
-const { photoUpload, productImageResizing } = require('../middleware/photoUpload');
+const { photoUpload, productImgResize } = require('../middleware/photoUpload');
 
 
 const productRouter = express.Router();
 
 productRouter.post('/create',
     photoUpload.single('image'),
-    productImageResizing,
+    productImgResize,
     authMiddleware,
     createProductCtrl);
 productRouter.get('/', fetchProductsCtrl);

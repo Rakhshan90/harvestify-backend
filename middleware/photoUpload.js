@@ -1,28 +1,61 @@
 const multer = require('multer');
-// const sharp = require('sharp');
+const sharp = require('sharp');
 const path = require('path');
 
+//storage
 const multerStorage = multer.memoryStorage();
 
-const multerFiler = (req, file, cb) => {
-    if (file.mimetype.startsWith('image')) cb(null, true);
-    else cb({ message: 'file format not supported' }, false);
-}
+//file type checking
+const multerFilter = (req, file, cb)=>{
+    //check file type
+    if(file.mimetype.startsWith("image")){
+        //continue asynchronous operation of multer middleware 
+        //cb -> callback
+        cb(null, true);
+    }
+    else{
+        //rejected
+        //cb -> callback
+        cb({message: "unsupported file format"}, false);
+    }
+};
 
-// multer configuration
 const photoUpload = multer({
     storage: multerStorage,
-    fileFilter: multerFiler,
-    limits: { fileSize: 1000000 }
-});
+    fileFilter: multerFilter,
+    limits: {fileSize: 1000000}
+})
 
-// product image resizing middleware
-const productImageResizing = async (req, res, next) => {
-    if (!req.file) next();
-  
+
+//Profile photo resizing
+// const profilePhotoResize  = async(req, res, next)=>{
+//     //check if there is no file exist
+//     if(!req.file) return next();
+
+//     req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
+//     // console.log("Resizing", req.file);
+
+//     await sharp(req.file.buffer)
+//     .resize(250, 250)
+//     .toFormat("jpeg")
+//     .jpeg({quality: 90})
+//     .toFile(path.join(`public/images/profiles/${req.file.filename}`));
+//     next();
+// };
+
+//post image resizing
+const productImgResize  = async(req, res, next)=>{
+    //check if there is no file exist
+    if(!req.file) return next();
+
     req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
-  
-    
-  };
 
-module.exports = { photoUpload, productImageResizing }
+    await sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat("jpeg")
+    .jpeg({quality: 90})
+    .toFile(path.join(`public/images/products/${req.file.filename}`));
+    next();
+};
+
+module.exports = {photoUpload, productImgResize };

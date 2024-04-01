@@ -1,5 +1,5 @@
 const express = require('express');
-const { createAuctionCtrl, fetchAllAuctionsCtrl, fetchAuctionByIdCtrl, placeBidCtrl, fetchBidsOnAuctionCtrl, cancelAuctionCtrl } = require('../controller/auctionCtrl');
+const { createAuctionCtrl, fetchAllAuctionsCtrl, fetchAuctionByIdCtrl, placeBidCtrl, fetchBidsOnAuctionCtrl, cancelAuctionCtrl, deleteAuctionCtrl } = require('../controller/auctionCtrl');
 const authMiddleware = require('../middleware/authMiddleware');
 const auctionRouter = express.Router();
 
@@ -10,6 +10,7 @@ auctionRouter.get('/:id', fetchAuctionByIdCtrl);
 auctionRouter.post('/place/bid', authMiddleware, placeBidCtrl);
 auctionRouter.get('/bids/:auctionId', authMiddleware, fetchBidsOnAuctionCtrl);
 auctionRouter.put('/cancel/:auctionId', authMiddleware, cancelAuctionCtrl);
+auctionRouter.delete('/delete/:auctionId', authMiddleware, deleteAuctionCtrl);
 
 
 module.exports = auctionRouter;
