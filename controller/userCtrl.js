@@ -5,6 +5,8 @@ const validateMongoId = require('../util/validateMongoId');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const Mailgen = require('mailgen');
+const cloudinaryUploadImg = require('../util/cloudinary');
+const fs = require('fs')
 
 const userRegisterCtrl = expressAsyncHandler(async (req, res) => {
     const userExist = await User.findOne({ email: req?.body?.email });
@@ -111,18 +113,18 @@ const updateUserCtrl = expressAsyncHandler(async (req, res) => {
     }
 });
 
-const updatePasswordCtrl = expressAsyncHandler(async (req, res)=>{
-    const {_id} = req?.user;
+const updatePasswordCtrl = expressAsyncHandler(async (req, res) => {
+    const { _id } = req?.user;
     // check whether user id is valid
     validateMongoId(_id);
-    const {password} = req?.body;
+    const { password } = req?.body;
     const user = await User.findById(_id);
-    if(password){
+    if (password) {
         user.password = password;
         const updateUser = await user.save();
         res.json(updateUser);
     }
-    else{
+    else {
         res.json(user);
     }
 });
@@ -151,10 +153,10 @@ const unBlockUserCtrl = expressAsyncHandler(async (req, res) => {
     res.json(user);
 });
 
-const generateResetPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
+const generateResetPasswordTokenCtrl = expressAsyncHandler(async (req, res) => {
     const email = req?.body?.email;
-    const user = await User.findOne({email});
-    if(!user) throw new Error("No such user is found");
+    const user = await User.findOne({ email });
+    if (!user) throw new Error("No such user is found");
     try {
         const token = await user.createResetPasswordToken();
         await user.save();
@@ -218,20 +220,37 @@ const generateResetPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
     }
 });
 
-const resetPasswordTokenCtrl = expressAsyncHandler(async (req, res)=>{
-    const {password, token} = req?.body;
+const resetPasswordTokenCtrl = expressAsyncHandler(async (req, res) => {
+    const { password, token } = req?.body;
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
         resetPasswordToken: hashedToken,
-        resetPasswordTokenExpiration: {$gt: Date.now()}
+        resetPasswordTokenExpiration: { $gt: Date.now() }
     });
-    if(!user) throw new Error("Failed to reset your password, try again");
+    if (!user) throw new Error("Failed to reset your password, try again");
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordTokenExpiration = undefined;
     await user.save();
     res.json(user);
 });
+
+const profilePhotoUploadCtrl = expressAsyncHandler(async (req, res) => {
+    //Find the login user
+    const { _id } = req?.user;
+    // get path to image
+    const imagePath = `public/images/profiles/${req?.file?.filename}`
+    const uploadedImg = await cloudinaryUploadImg(imagePath);
+    //update user profile photo
+    const updatedUser = await User.findByIdAndUpdate(_id,
+        {
+            profilePhoto: uploadedImg?.url
+        },
+        { new: true });
+    // remove image that is stored in images/profiles/image
+    fs.unlinkSync(imagePath);
+    res.json(updatedUser);
+})
 
 
 module.exports = {
@@ -246,4 +265,5 @@ module.exports = {
     unBlockUserCtrl,
     generateResetPasswordTokenCtrl,
     resetPasswordTokenCtrl,
+    profilePhotoUploadCtrl,
 };

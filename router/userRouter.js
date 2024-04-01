@@ -11,8 +11,10 @@ const {
     unBlockUserCtrl,
     generateResetPasswordTokenCtrl,
     resetPasswordTokenCtrl,
+    profilePhotoUploadCtrl,
 } = require('../controller/userCtrl');
 const authMiddleware = require('../middleware/authMiddleware');
+const { profilePhotoResize, photoUpload } = require('../middleware/photoUpload');
 
 const userRouter = express.Router();
 
@@ -28,5 +30,10 @@ userRouter.put('/block-user/:id', authMiddleware, blockUserCtrl);
 userRouter.put('/unblock-user/:id', authMiddleware, unBlockUserCtrl);
 userRouter.post('/forgot-password', generateResetPasswordTokenCtrl);
 userRouter.put('/reset-password', resetPasswordTokenCtrl);
+userRouter.put('/photo-upload',
+    photoUpload.single('image'),
+    profilePhotoResize,
+    authMiddleware,
+    profilePhotoUploadCtrl);
 
 module.exports = userRouter;

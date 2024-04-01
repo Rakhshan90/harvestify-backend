@@ -28,20 +28,20 @@ const photoUpload = multer({
 
 
 //Profile photo resizing
-// const profilePhotoResize  = async(req, res, next)=>{
-//     //check if there is no file exist
-//     if(!req.file) return next();
+const profilePhotoResize  = async(req, res, next)=>{
+    //check if there is no file exist
+    if(!req.file) return next();
 
-//     req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
-//     // console.log("Resizing", req.file);
+    req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
+    // console.log("Resizing", req.file);
 
-//     await sharp(req.file.buffer)
-//     .resize(250, 250)
-//     .toFormat("jpeg")
-//     .jpeg({quality: 90})
-//     .toFile(path.join(`public/images/profiles/${req.file.filename}`));
-//     next();
-// };
+    await sharp(req.file.buffer)
+    .resize(250, 250)
+    .toFormat("jpeg")
+    .jpeg({quality: 90})
+    .toFile(path.join(`public/images/profiles/${req.file.filename}`));
+    next();
+};
 
 //post image resizing
 const productImgResize  = async(req, res, next)=>{
@@ -58,4 +58,4 @@ const productImgResize  = async(req, res, next)=>{
     next();
 };
 
-module.exports = {photoUpload, productImgResize };
+module.exports = {photoUpload, productImgResize, profilePhotoResize};
