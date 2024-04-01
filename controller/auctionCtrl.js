@@ -244,7 +244,7 @@ const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
 
         const sentWinnerEmail = await transporter.sendMail({
           from: process.env.EMAIL,
-          to: winner?.email,
+          to: winner.email,
           subject: `You won the auction for ${product?.product_name}!`,
           html: winnerHTMLEmail,
         });
@@ -270,7 +270,7 @@ const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
 
         const sentOwnerEmail = await transporter.sendMail({
           from: process.env.EMAIL,
-          to: productOwner?.email,
+          to: productOwner.email,
           subject: "Your product has been sold in auction!",
           html: ownerHTMLEmail,
         });
@@ -306,6 +306,20 @@ const cancelAuctionCtrl = expressAsyncHandler(async (req, res) => {
   }
 });
 
+const deleteAuctionCtrl = expressAsyncHandler(async (req, res) => {
+  const { auctionId } = req?.params;
+  const { _id } = req?.user;
+  validateMongoId(auctionId);
+  try {
+    const user = await User.findById(_id).select("-password");
+    if (!user.isAdmin) return res.status(400).json({ message: "only admin can delete the auction" });
+    const deletedAuction = await Auction.findByIdAndDelete(auctionId);
+    res.json(deletedAuction);
+  } catch (error) {
+    res.json(error);
+  }
+})
+
 
 
 module.exports = {
@@ -316,4 +330,5 @@ module.exports = {
   fetchBidsOnAuctionCtrl,
   cancelAuctionCtrl,
   closeAuctionCtrl,
+  deleteAuctionCtrl,
 };

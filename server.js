@@ -38,7 +38,7 @@ app.use('/api/products', productRouter);
 app.use('/api/auctions', auctionRouter);
 
 // scheduling the closeAuctionCtrl periodically
-// const closeAuctionsJob = scheduled.scheduleJob("*/1 * * * *", closeAuctionCtrl);
+const closeAuctionsJob = scheduled.scheduleJob("*/1 * * * *", closeAuctionCtrl);
 
 // middlewares
 app.use(notFound);
