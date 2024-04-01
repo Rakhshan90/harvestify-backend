@@ -204,8 +204,10 @@ const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
 
         // **Add notification logic here in the future**
         const winner = await User.findById(auction?.winner?._id);
+        if(!winner) res.status(500).send("Address of Winner is not found")
         const product = await Product.findById(auction?.product?._id);
         const productOwner = await User.findById(product?.owner?._id);
+        if(!productOwner) res.status(500).send("Address of Product owner is not found");
 
         const transporter = await nodemailer.createTransport({
           service: 'gmail',
@@ -238,13 +240,13 @@ const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
             },
           }
         };
-
+        const winnerEmail = winner.email
         // Generate an HTML email with the provided contents
         const winnerHTMLEmail = mailGenerator.generate(winnerEmailMsg);
 
         const sentWinnerEmail = await transporter.sendMail({
           from: process.env.EMAIL,
-          to: winner.email,
+          to: winnerEmail,
           subject: `You won the auction for ${product?.product_name}!`,
           html: winnerHTMLEmail,
         });
@@ -265,12 +267,13 @@ const closeAuctionCtrl = expressAsyncHandler(async (req, res) => {
           }
         };
 
+        const ownerEmail = productOwner.email;
         // Generate an HTML email with the provided contents
         const ownerHTMLEmail = mailGenerator.generate(ownerEmailMsg);
 
         const sentOwnerEmail = await transporter.sendMail({
           from: process.env.EMAIL,
-          to: productOwner.email,
+          to: ownerEmail,
           subject: "Your product has been sold in auction!",
           html: ownerHTMLEmail,
         });
