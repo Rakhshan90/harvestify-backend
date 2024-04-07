@@ -22,6 +22,7 @@ const userRegisterCtrl = expressAsyncHandler(async (req, res) => {
             password: req?.body?.password,
             phone: req?.body?.phone,
             gender: req?.body?.gender,
+            location: req?.body?.location,
             user_type: req?.body?.user_type,
         })
         res.json(user);
