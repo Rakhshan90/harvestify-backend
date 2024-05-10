@@ -37,6 +37,11 @@ app.use('/api/products', productRouter);
 // auction router
 app.use('/api/auctions', auctionRouter);
 
+// for deployment purpose
+app.get('/', (req, res)=>{
+    res.status(200).send("Hello World!")
+});
+
 // scheduling the closeAuctionCtrl periodically
 const closeAuctionsJob = scheduled.scheduleJob("*/1 * * * *", closeAuctionCtrl);
 
