@@ -1,5 +1,6 @@
 const multer = require('multer');
-const sharp = require('sharp');
+// const sharp = require('sharp');
+const Jimp = require('jimp');
 const path = require('path');
 
 //storage
@@ -28,34 +29,75 @@ const photoUpload = multer({
 
 
 //Profile photo resizing
-const profilePhotoResize  = async(req, res, next)=>{
-    //check if there is no file exist
-    if(!req.file) return next();
+// const profilePhotoResize  = async(req, res, next)=>{
+//     //check if there is no file exist
+//     if(!req.file) return next();
 
-    req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
-    // console.log("Resizing", req.file);
+//     req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
+//     // console.log("Resizing", req.file);
 
-    await sharp(req.file.buffer)
-    .resize(250, 250)
-    .toFormat("jpeg")
-    .jpeg({quality: 90})
-    .toFile(path.join(`public/images/profiles/${req.file.filename}`));
-    next();
-};
+//     await sharp(req.file.buffer)
+//     .resize(250, 250)
+//     .toFormat("jpeg")
+//     .jpeg({quality: 90})
+//     .toFile(path.join(`public/images/profiles/${req.file.filename}`));
+//     next();
+// };
 
 //post image resizing
-const productImgResize  = async(req, res, next)=>{
+// const productImgResize  = async(req, res, next)=>{
+//     //check if there is no file exist
+//     if(!req.file) return next();
+
+//     req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
+
+//     await sharp(req.file.buffer)
+//     .resize(500, 500)
+//     .toFormat("jpeg")
+//     .jpeg({quality: 90})
+//     .toFile(path.join(`public/images/products/${req.file.filename}`));
+//     next();
+// };
+
+
+//Profile photo resizing
+const profilePhotoResize = async (req, res, next) => {
     //check if there is no file exist
-    if(!req.file) return next();
-
+    if (!req.file) return next();
+  
     req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
-
-    await sharp(req.file.buffer)
-    .resize(500, 500)
-    .toFormat("jpeg")
-    .jpeg({quality: 90})
-    .toFile(path.join(`public/images/products/${req.file.filename}`));
-    next();
-};
+  
+    try {
+      const image = await Jimp.read(req.file.buffer);
+      const resizedImage = await image
+        .resize(250, 250) // resize
+        .quality(90) // set JPEG quality
+        .writeAsync(path.join(`public/images/profiles/${req.file.filename}`));
+      next();
+    } catch (error) {
+      console.error("Error resizing image:", error);
+      // Handle the error appropriately, potentially sending an error response
+    }
+  };
+  
+  //post image resizing
+  const productImgResize = async (req, res, next) => {
+    //check if there is no file exist
+    if (!req.file) return next();
+  
+    req.file.filename = `user-${Date.now()}-${req.file.originalname}`;
+  
+    try {
+      const image = await Jimp.read(req.file.buffer);
+      const resizedImage = await image
+        .resize(500, 500) // resize
+        .quality(90) // set JPEG quality
+        .writeAsync(path.join(`public/images/products/${req.file.filename}`));
+      next();
+    } catch (error) {
+      console.error("Error resizing image:", error);
+      // Handle the error appropriately, potentially sending an error response
+    }
+  };
 
 module.exports = {photoUpload, productImgResize, profilePhotoResize};
