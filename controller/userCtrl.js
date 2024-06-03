@@ -162,7 +162,7 @@ const generateResetPasswordTokenCtrl = expressAsyncHandler(async (req, res) => {
         const token = await user.createResetPasswordToken();
         await user.save();
 
-        const resetUrl = `If your were requested to reset your account, please reset your account within 10 mins, otherwise ignore this meassage <a href="https://harvestify-backend.onrender.com/reset-password/${token}">Click to verify your account<a/>`;
+        const resetUrl = `If your were requested to reset your account, please reset your account within 10 mins, otherwise ignore this meassage <a href="https://harvestify-orcin.vercel.app/reset-password/${token}">Click to verify your account<a/>`;
 
         //building email message
         const transporter = await nodemailer.createTransport({
@@ -195,7 +195,7 @@ const generateResetPasswordTokenCtrl = expressAsyncHandler(async (req, res) => {
                     button: {
                         color: '#22BC66', // Optional action button color
                         text: 'Reset Password',
-                        link: `https://harvestify-backend.onrender.com/reset-password/${token}`
+                        link: `https://harvestify-orcin.vercel.app/reset-password/${token}`
                     }
                 },
                 outro: 'Do not reply to this email, It is an auto-generated email'
